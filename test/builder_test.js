@@ -2,7 +2,6 @@ var test = require('tap').test
 var broccoli = require('..')
 var Builder = broccoli.Builder
 var RSVP = require('rsvp')
-var Promise = RSVP.Promise
 
 RSVP.on('error', function(error) {
   throw error
@@ -15,7 +14,14 @@ function countingTree (readFn) {
       return readFn.call(this, readTree)
     },
     readCount: 0,
-    cleanup: function () { this.cleanupCount++ },
+    cleanup: function () {
+      var self = this;
+
+      RSVP.resolve()
+        .then(function() {
+          self.cleanupCount++
+        });
+    },
     cleanupCount: 0
   }
 }
@@ -79,7 +85,9 @@ test('Builder', function (t) {
           t.equal(hash.directory, 'foo')
           builder.build().catch(function (err) {
             t.equal(err.message, 'bar')
-            builder.cleanup()
+            return builder.cleanup()
+          })
+          .then(function() {
             t.equal(tree.cleanupCount, 1)
             t.equal(subtree1.cleanupCount, 1)
             t.equal(subtree2.cleanupCount, 1)
@@ -95,7 +103,7 @@ test('Builder', function (t) {
   test('tree graph', function (t) {
     var parent = countingTree(function (readTree) {
       return readTree(child).then(function (dir) {
-        return new Promise(function (resolve, reject) {
+        return new RSVP.Promise(function (resolve, reject) {
           setTimeout(function() { resolve('parentTreeDir') }, 30)
         })
       })
@@ -103,7 +111,7 @@ test('Builder', function (t) {
 
     var child = countingTree(function (readTree) {
       return readTree('srcDir').then(function (dir) {
-        return new Promise(function (resolve, reject) {
+        return new RSVP.Promise(function (resolve, reject) {
           setTimeout(function() { resolve('childTreeDir') }, 20)
         })
       })
@@ -116,7 +124,7 @@ test('Builder', function (t) {
       // the actual results of process.hrtime() are not
       // reliable
       if (process.env.CI !== 'true') {
-        t.ok(a >= b - 5e6 && a <= b + 5e6, 'Wanted ' + b + ' +/- 5e6, found ' + a)
+        t.ok(a >= b - 5e6 && a <= b + 5e6, a + ' should be within ' + b + ' +/- 5e6')
       }
     }
 

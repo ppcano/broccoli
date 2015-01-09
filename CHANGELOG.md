@@ -1,6 +1,24 @@
 # master
 
-* Update `ncp` to 0.6.0 so that symlinks can be resolved automatically.
+# 0.13.3
+
+* Fix SIGINT/SIGTERM (Ctrl+C) handling to avoid leaking tmp files
+
+# 0.13.2
+
+* Extract slow trees printout into broccoli-slow-trees package
+* Allow the tree `cleanup` method to be asynchronous (by returning a promise).
+
+# 0.13.1
+
+* Update dependencies to fix
+  [various low-severity vulnerabilities](https://github.com/broccolijs/broccoli/issues/196)
+  in `broccoli serve`
+
+# 0.13.0
+
+* Dereference symlinks in `broccoli build` output by copying the files or
+  directories they point to into place
 * Sort entries when browsing directories in middleware
 
 # 0.12.3
